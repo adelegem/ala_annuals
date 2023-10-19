@@ -33,16 +33,31 @@ unique(annual_perennial_traits$value)
 #[19] "ephemeral perennial"                             "annual biennial perennial short_lived_perennial"
 #surely a 'ephemeral perennial short lived perennial is an annual????
 
+annual_trait <- unique(annual_perennial_traits$value[grepl("annual", annual_perennial_traits$value)])
+
+
 #number of records with 'annual' value
-sum(annual_perennial_traits$value == 'annual')
-#9788
+sum(annual_perennial_traits$value %in% annual_trait)
+#12441
 
 #records of annuals
-annual_species_data <- subset(annual_perennial_traits, value == 'annual')
+annual_species_data <- subset(annual_perennial_traits, value %in% annual_trait)
 
 #unique taxa with at least one record of annual life history form
 length(unique(annual_species_data$taxon_name))
-#3747
+#4427
 
+```
+
+```{r}
+install.packages("galah")
+install.packages("remotes")
+remotes::install_github("AtlasOfLivingAustralia/galah")
+
+galah_config(email = 'adelegemmell@hotmail.com')
+
+```
+
+```{r}
 
 ```

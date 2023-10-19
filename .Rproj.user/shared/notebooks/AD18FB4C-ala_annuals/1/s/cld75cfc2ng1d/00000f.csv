@@ -1,0 +1,5 @@
+"0","galah_config(email = 'adelegemmell@hotmail.com')
+"
+"2","Error in galah_config(email = ""adelegemmell@hotmail.com"") : 
+  could not find function ""galah_config""
+"

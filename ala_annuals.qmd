@@ -2,16 +2,25 @@
 title: "annual plants are cool"
 format: html
 editor: visual
+execute:
+  warning: false
+  output: true
 ---
 
 ```{r}
-install.packages("tidyverse")
-devtools::install_github("traitecoevo/austraits")
+
+#devtools::install_github("traitecoevo/austraits")
+#install.packages("remotes")
+#remotes::install_github("AtlasOfLivingAustralia/galah")
+
 library(tidyverse)
 library(austraits)
+library(galah)
 austraits <- load_austraits(version = "4.1.0", path = "intro/downloads")
 
 ```
+
+## Extracting life form traits from austraits
 
 ```{r}
 #extract life history traits
@@ -40,24 +49,153 @@ annual_trait <- unique(annual_perennial_traits$value[grepl("annual", annual_pere
 sum(annual_perennial_traits$value %in% annual_trait)
 #12441
 
+write.csv(annual_perennial_traits, 'data_out/life_form_traits.csv')
+
 #records of annuals
 annual_species_data <- subset(annual_perennial_traits, value %in% annual_trait)
+
+write.csv(annual_species_data, 'data_out/annual_species.csv')
+
+annual_perennial_traits <- read.csv('data_out/life_form_traits.csv')
+
+annual_species_data <- read.csv('data_out/annual_species.csv')
 
 #unique taxa with at least one record of annual life history form
 length(unique(annual_species_data$taxon_name))
 #4427
 
+family_counts <- annual_species_data %>%
+  group_by(family) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+family_counts
+
+ast_annual <- annual_species_data %>%
+  filter(family == 'Asteraceae',
+         taxon_rank == 'Species')
+
+ast_annual <- unique(ast_annual$taxon_name)
+
+annual_species <- unique(annual_species_data$taxon_name)
+
+```
+
+## Creating counts for Asteraceae/all annual species
+
+```{r}
+
+# Initialize an empty list to store the counts
+#all_counts <- list()
+
+#counts for species in annual_species
+#for (species in annual_species) {
+#  counts <- galah_call() %>%
+#    galah_identify(species) %>%
+#    atlas_counts()
+#  
+#  all_counts[[species]] <- counts
+#}
+
+# empty list to store the counts
+#ast_counts <- list()
+
+#for (species in ast_annual) {
+#  counts <- galah_call() %>%
+#    galah_identify(species) %>%
+#    atlas_counts()
+#  
+#  ast_counts[[species]] <- counts
+#}
+
+#ast_annual_df <- data.frame(species = ast_annual)
+
 ```
 
 ```{r}
-install.packages("galah")
-install.packages("remotes")
-remotes::install_github("AtlasOfLivingAustralia/galah")
+
+#just playing with sturts desert pea
+library(ozmaps)
+library(sf)
 
 galah_config(email = 'adelegemmell@hotmail.com')
 
+sturts_dp <- galah_call() |>
+  galah_identify("Swainsona formosa") |>
+  galah_apply_profile(ALA) |> # A set of data quality filters to remove spurious records
+  atlas_occurrences()
+
+sturts_dp$year <- substr(sturts_dp$eventDate, 1, 4)
+
+sturts_dp$month <- substr(sturts_dp$eventDate, 6, 7)
+
+sturts_dp$month <- month.name[as.numeric(sturts_dp$month)]
+
+aus <- ozmaps::ozmap_country |>
+  st_transform(crs = st_crs(4326))
+
+# Map
+ggplot() +
+  geom_sf(data = aus,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = sturts_dp,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = month)) +
+  theme_void()
 ```
 
-```{r}
+## Animated map of Asteraceae annual species by month
 
+```{r}
+## animated map of asteraceae annual plants (based on austraits)
+#install.packages('gganimate')
+#install.packages('gifski')
+library(ggplot2)
+library(gganimate)
+library(gifski)
+
+
+ast_all <- galah_call() |>
+  galah_identify('Asteraceae') |>
+  galah_filter(country == 'Australia') |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+
+ast_annual_ala <- ast_all %>%
+  subset(scientificName %in% ast_annual) %>%
+  drop_na(decimalLongitude, eventDate) 
+  
+  
+ast_annual_ala$year <- substr(ast_annual_ala$eventDate, 1, 4)
+
+ast_annual_ala$month <- substr(ast_annual_ala$eventDate, 6, 7)
+
+ast_annual_ala$month <- as.numeric(ast_annual_ala$month)
+
+ast_annual_ala$months <- month.name[(ast_annual_ala$month)]
+
+ast_annual_ala$months <- factor(ast_annual_ala$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+
+
+map <- ggplot() +
+  geom_sf(data = aus,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = ast_annual_ala,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = months)) +
+  labs(legend = 'Month') +
+  theme_void()
+map
+
+
+map_anime <- map +
+  transition_time(month) +
+  ggtitle('Asteraceae annual plant records by month \n Month: {frame_time}',
+          subtitle = 'Frame {frame} of {nframes}')
+num_month <- max(ast_annual_ala$month) - min(ast_annual_ala$month) + 1
+animate(map_anime, nframes = num_month, duration = 6)
 ```

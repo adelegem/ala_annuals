@@ -1,0 +1,322 @@
+"0","install.packages(""galah"")
+"
+"2","WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+"
+"2","Installing package into ‘C:/Users/adele/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/galah_1.5.4.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 1933673 bytes (1.8 MB)
+"
+"2","downloaded 1.8 MB
+
+"
+"1","package ‘galah’ successfully unpacked and MD5 sums checked
+"
+"1","
+"
+"1",""
+"1","The downloaded binary packages are in
+	C:\Users\adele\AppData\Local\Temp\RtmpwRnr05\downloaded_packages"
+"1",""
+"1","
+"
+"0","install.packages(""galah"")"
+"2","WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+"
+"2","Installing package into ‘C:/Users/adele/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/galah_1.5.4.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 1933673 bytes (1.8 MB)
+"
+"2","downloaded 1.8 MB
+
+"
+"1","package ‘galah’ successfully unpacked and MD5 sums checked
+"
+"1","
+"
+"1",""
+"1","The downloaded binary packages are in
+	C:\Users\adele\AppData\Local\Temp\RtmpwRnr05\downloaded_packages"
+"1",""
+"1","
+"
+"0","library(galah)"
+"2","Warning: package ‘galah’ was built under R version 4.3.1"
+"2","
+Attaching package: ‘galah’
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    filter
+
+"
+"0","install.packages(""remotes"")"
+"1","Error in "
+"1",""
+"1","install.packages"
+"1",""
+"1"," : "
+"1",""
+"1","Updating loaded packages"
+"1",""
+"1","
+"
+"0","remotes::install_github(""AtlasOfLivingAustralia/galah"")"
+"2","Downloading GitHub repo AtlasOfLivingAustralia/galah@HEAD
+"
+"1","These packages have more recent versions available.
+It is recommended to update all of them.
+Which would you like to update?"
+"1",""
+"1","
+"
+"1",""
+"1","
+"
+"1","1: All                             "
+"1","
+"
+"1","2: CRAN packages only              "
+"1","
+"
+"1","3: None                            "
+"1","
+"
+"1","4: vctrs  (0.6.2  -> 0.6.4 ) [CRAN]"
+"1","
+"
+"1","5: utf8   (1.2.3  -> 1.2.4 ) [CRAN]"
+"1","
+"
+"1","6: Rcpp   (1.0.10 -> 1.0.11) [CRAN]"
+"1","
+"
+"1","7: wk     (0.8.0  -> 0.9.0 ) [CRAN]"
+"1","
+"
+"1","8: curl   (5.0.0  -> 5.1.0 ) [CRAN]"
+"1","
+"
+"1","9: digest (0.6.31 -> 0.6.33) [CRAN]"
+"1","
+"
+"1",""
+"1","
+"
+"0","install.packages(""remotes"")"
+"0","1"
+"1","vctrs  (0.6.2  -> 0.6.4 ) [CRAN]"
+"1","
+"
+"1","utf8   (1.2.3  -> 1.2.4 ) [CRAN]"
+"1","
+"
+"1","Rcpp   (1.0.10 -> 1.0.11) [CRAN]"
+"1","
+"
+"1","wk     (0.8.0  -> 0.9.0 ) [CRAN]"
+"1","
+"
+"1","curl   (5.0.0  -> 5.1.0 ) [CRAN]"
+"1","
+"
+"1","digest (0.6.31 -> 0.6.33) [CRAN]"
+"1","
+"
+"2","Installing 6 packages: vctrs, utf8, Rcpp, wk, curl, digest
+"
+"2","Installing packages into ‘C:/Users/adele/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/vctrs_0.6.4.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 1333946 bytes (1.3 MB)
+"
+"2","downloaded 1.3 MB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/utf8_1.2.4.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 149764 bytes (146 KB)
+"
+"2","downloaded 146 KB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/Rcpp_1.0.11.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 2875896 bytes (2.7 MB)
+"
+"2","downloaded 2.7 MB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/wk_0.9.0.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 2056030 bytes (2.0 MB)
+"
+"2","downloaded 2.0 MB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/curl_5.1.0.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 3215653 bytes (3.1 MB)
+"
+"2","downloaded 3.1 MB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/digest_0.6.33.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 206271 bytes (201 KB)
+"
+"2","downloaded 201 KB
+
+"
+"1","package ‘vctrs’ successfully unpacked and MD5 sums checked
+"
+"2","Warning: cannot remove prior installation of package ‘vctrs’"
+"2","Warning: problem copying C:\Users\adele\AppData\Local\R\win-library\4.3\00LOCK\vctrs\libs\x64\vctrs.dll to C:\Users\adele\AppData\Local\R\win-library\4.3\vctrs\libs\x64\vctrs.dll: Permission denied"
+"2","Warning: restored ‘vctrs’"
+"1","package ‘utf8’ successfully unpacked and MD5 sums checked
+"
+"2","Warning: cannot remove prior installation of package ‘utf8’"
+"2","Warning: problem copying C:\Users\adele\AppData\Local\R\win-library\4.3\00LOCK\utf8\libs\x64\utf8.dll to C:\Users\adele\AppData\Local\R\win-library\4.3\utf8\libs\x64\utf8.dll: Permission denied"
+"2","Warning: restored ‘utf8’"
+"1","package ‘Rcpp’ successfully unpacked and MD5 sums checked
+"
+"2","Warning: cannot remove prior installation of package ‘Rcpp’"
+"2","Warning: problem copying C:\Users\adele\AppData\Local\R\win-library\4.3\00LOCK\Rcpp\libs\x64\Rcpp.dll to C:\Users\adele\AppData\Local\R\win-library\4.3\Rcpp\libs\x64\Rcpp.dll: Permission denied"
+"2","Warning: restored ‘Rcpp’"
+"1","package ‘wk’ successfully unpacked and MD5 sums checked
+"
+"1","package ‘curl’ successfully unpacked and MD5 sums checked
+"
+"2","Warning: cannot remove prior installation of package ‘curl’"
+"2","Warning: problem copying C:\Users\adele\AppData\Local\R\win-library\4.3\00LOCK\curl\libs\x64\curl.dll to C:\Users\adele\AppData\Local\R\win-library\4.3\curl\libs\x64\curl.dll: Permission denied"
+"2","Warning: restored ‘curl’"
+"1","package ‘digest’ successfully unpacked and MD5 sums checked
+"
+"2","Warning: cannot remove prior installation of package ‘digest’"
+"2","Warning: problem copying C:\Users\adele\AppData\Local\R\win-library\4.3\00LOCK\digest\libs\x64\digest.dll to C:\Users\adele\AppData\Local\R\win-library\4.3\digest\libs\x64\digest.dll: Permission denied"
+"2","Warning: restored ‘digest’"
+"1","
+"
+"1",""
+"1","The downloaded binary packages are in
+	C:\Users\adele\AppData\Local\Temp\RtmpwRnr05\downloaded_packages"
+"1",""
+"1","
+"
+"1","[36m──[39m [36mR CMD build[39m [36m─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m"
+"1",""
+"1","
+"
+"2","WARNING: Rtools is required to build R packages, but is not currently installed.
+
+Please download and install Rtools 4.2 from https://cran.r-project.org/bin/windows/Rtools/ or https://www.r-project.org/nosvn/winutf8/ucrt3/.
+"
+"1","  "
+"1","  "
+"1",""
+"1",""
+"1","  "
+"1","[32m✔[39m  [38;5;247mchecking for file 'C:\Users\adele\AppData\Local\Temp\RtmpwRnr05\remotes674c1caf2cf\AtlasOfLivingAustralia-galah-R-4d093de/DESCRIPTION'[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","  "
+"1",""
+"1",""
+"1","  "
+"1","[38;5;247m─[39m[38;5;247m  [39m[38;5;247mpreparing 'galah':[39m[36m[36m (1.8s)[36m[39m"
+"1",""
+"1","
+"
+"1","   checking DESCRIPTION meta-information ..."
+"1",""
+"1",""
+"1","  "
+"1","   checking DESCRIPTION meta-information ... "
+"1",""
+"1",""
+"1","  "
+"1","[32m✔[39m  [38;5;247mchecking DESCRIPTION meta-information[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","  "
+"1",""
+"1",""
+"1","  "
+"1","[38;5;247m─[39m[38;5;247m  [39m[38;5;247mchecking for LF line-endings in source and make files and shell scripts[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","  "
+"1",""
+"1",""
+"1","  "
+"1","[38;5;247m─[39m[38;5;247m  [39m[38;5;247mchecking for empty or unneeded directories[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","  "
+"1",""
+"1",""
+"1","  "
+"1","[38;5;247m─[39m[38;5;247m  [39m[38;5;247mlooking to see if a 'data/datalist' file should be added[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","[38;5;247m─[39m[38;5;247m  [39m[38;5;247mbuilding 'galah_1.5.4.tar.gz'[39m[36m[39m"
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"1","  "
+"1","   "
+"1",""
+"1","
+"
+"1",""
+"1",""
+"1",""
+"2","Warning: package ‘galah’ is in use and will not be installed"

@@ -1,7 +1,0 @@
-"0","#unique taxa with at least one record of annual life history form
-length(unique(annual_species_data$taxon_name))
-"
-"1","[1]"
-"1"," 4427"
-"1","
-"

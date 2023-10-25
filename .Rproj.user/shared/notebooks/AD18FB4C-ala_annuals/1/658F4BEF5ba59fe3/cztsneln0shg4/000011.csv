@@ -1,0 +1,9 @@
+"0","galah_call() |>
+  galah_identify(ast_annual_df$species) |>
+  galah_filter(year == 2001) |>
+  galah_select(scientificName, decimalLongitude, decimalLatitude) |>
+  atlas_occurrences()
+"
+"2","Calling the API failed for `atlas_occurrences`.
+[34mℹ[39m This might mean that the API is down, or that you are not connected to the internet
+[34mℹ[39m Double check that your query is correct, or try again later"

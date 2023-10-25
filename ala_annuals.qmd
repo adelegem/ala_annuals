@@ -62,6 +62,9 @@ annual_perennial_traits <- read.csv('data_out/life_form_traits.csv')
 
 annual_species_data <- read.csv('data_out/annual_species.csv')
 
+#vector containing names of all annual taxa from austraits
+annual_species <- unique(annual_species_data$taxon_name)
+
 #unique taxa with at least one record of annual life history form
 length(unique(annual_species_data$taxon_name))
 #4427
@@ -76,17 +79,17 @@ ast_annual <- annual_species_data %>%
   filter(family == 'Asteraceae',
          taxon_rank == 'Species')
 
+#vector of names of annual asteraceae species
 ast_annual <- unique(ast_annual$taxon_name)
 
-annual_species <- unique(annual_species_data$taxon_name)
 
 ```
 
-## Creating counts for Asteraceae/all annual species
+## Obtaining counts for Asteraceae/all annual species
 
 ```{r}
 
-# Initialize an empty list to store the counts
+#empty list to storecounts
 #all_counts <- list()
 
 #counts for species in annual_species
@@ -98,7 +101,7 @@ annual_species <- unique(annual_species_data$taxon_name)
 #  all_counts[[species]] <- counts
 #}
 
-# empty list to store the counts
+# empty list to store counts
 #ast_counts <- list()
 
 #for (species in ast_annual) {
@@ -109,42 +112,7 @@ annual_species <- unique(annual_species_data$taxon_name)
 #  ast_counts[[species]] <- counts
 #}
 
-#ast_annual_df <- data.frame(species = ast_annual)
 
-```
-
-```{r}
-
-#just playing with sturts desert pea
-library(ozmaps)
-library(sf)
-
-galah_config(email = 'adelegemmell@hotmail.com')
-
-sturts_dp <- galah_call() |>
-  galah_identify("Swainsona formosa") |>
-  galah_apply_profile(ALA) |> # A set of data quality filters to remove spurious records
-  atlas_occurrences()
-
-sturts_dp$year <- substr(sturts_dp$eventDate, 1, 4)
-
-sturts_dp$month <- substr(sturts_dp$eventDate, 6, 7)
-
-sturts_dp$month <- month.name[as.numeric(sturts_dp$month)]
-
-aus <- ozmaps::ozmap_country |>
-  st_transform(crs = st_crs(4326))
-
-# Map
-ggplot() +
-  geom_sf(data = aus,
-          fill = NA,
-          colour = "grey60") +
-  geom_point(data = sturts_dp,
-             aes(x = decimalLongitude,
-                 y = decimalLatitude,
-                 color = month)) +
-  theme_void()
 ```
 
 ## Animated map of Asteraceae annual species by month
@@ -156,7 +124,10 @@ ggplot() +
 library(ggplot2)
 library(gganimate)
 library(gifski)
+library(sf)
+library(ozmaps)
 
+galah_config(email = 'adelegemmell@hotmail.com')
 
 ast_all <- galah_call() |>
   galah_identify('Asteraceae') |>
@@ -168,8 +139,19 @@ ast_all <- galah_call() |>
 ast_annual_ala <- ast_all %>%
   subset(scientificName %in% ast_annual) %>%
   drop_na(decimalLongitude, eventDate) 
-  
-  
+
+
+sum(unique(ast_annual_ala$scientificName) %in% ast_annual) 
+#623 species from ALA out of 631 asteraceae annual species from austraits 
+
+ast_annual_df <- data.frame(species = ast_annual)
+
+ast_annual_df$ala <- ast_annual_df$species %in% ast_annual_ala$scientificName 
+
+ast_annual_df$species[ast_annual_df$ala == FALSE]
+#extinct, poorly known taxa, or taxonomic issues eg ("Senecio productus" "Senecio serratiformis")
+
+
 ast_annual_ala$year <- substr(ast_annual_ala$eventDate, 1, 4)
 
 ast_annual_ala$month <- substr(ast_annual_ala$eventDate, 6, 7)
@@ -179,6 +161,9 @@ ast_annual_ala$month <- as.numeric(ast_annual_ala$month)
 ast_annual_ala$months <- month.name[(ast_annual_ala$month)]
 
 ast_annual_ala$months <- factor(ast_annual_ala$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+
+aus <- ozmaps::ozmap_country |>
+  st_transform(crs = st_crs(4326))
 
 
 map <- ggplot() +

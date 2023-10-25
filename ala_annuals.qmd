@@ -1,6 +1,8 @@
 ---
 title: "annual plants are cool"
-format: html
+format:
+  html:
+    embed-resources: true
 editor: visual
 execute:
   warning: false

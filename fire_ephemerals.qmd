@@ -1,0 +1,114 @@
+---
+title: "fire_ephemerals"
+format: html
+editor: visual
+---
+
+## Fire Ephemerals
+
+Load NSW Fire dataset
+
+```{r}
+#install.packages("pacman")
+#pacman::p_load(tidyverse, here, rmapshaper, sf, ggpointdensity, viridis, ozmaps, concaveman, cowplot, patchwork)
+library(maps)
+library(mapdata)
+library(tidyverse)
+
+fire <- st_read(here("NPWS_fire", "NPWSFireHistory.shp")) |> 
+  st_transform(crs = 4326) |> 
+  st_zm() |>  # Remove Z or M values
+
+#add start year
+fire$StartYear <- substr(fire$StartDate, 1, 4)
+
+#some fires have an arbitary 'start year' of 1899 where the start date is unknown, even if they are labelled as '1996-97 wildfire'. replace start year for these records with the year given in the 'Label' field. The fire dataset begins in 1902
+
+fire <-  fire %>%
+  mutate(StartYear = ifelse(is.na(StartYear) | StartYear == '1899', substr(Label, 1, 4), StartYear))
+
+#create nswv polygon
+sf_oz <- ozmap_data("states") |>
+  st_transform(crs = 4326)
+
+nsw <- sf_oz %>%
+  filter(NAME == 'New South Wales')
+
+```
+
+## Get distribution data on fire ephemerals in NSW
+
+```{r}
+#based on https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-2_Sept-Nov21_Bell-v1.pdf, some NSW fire ephemerals include Actinotus forsythii, Monotaxis macrophylla (endangered), Gyrostemon australasicus, Gyrostemon thesioides (endangered), Androcalva procumbens (vulnerable), Androcalva rosea (endangered), Commersonia rugosa 
+
+library(galah)
+
+galah_config(email = 'adelegemmell@hotmail.com')
+
+show_all_fields() |>
+  View()
+
+fire_ephemerals <- galah_call() |>
+  galah_identify('Actinotus forsythii', 'Monotaxis macrophylla', 'Gyrostemon australasicus', 'Gyrostemon thesioides', 'Androcalva procumbens', 'Androcalva rosea', 'Commersonia rugosa') |>
+  galah_filter(cl22 == 'New South Wales') |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+fire_ephemerals %>% 
+  group_by(scientificName) %>%
+  summarise(count = n())
+
+fire_ephemerals$year <- substr(fire_ephemerals$eventDate, 1, 4)
+
+fire_ephemerals$month <- substr(fire_ephemerals$eventDate, 6, 7)
+
+fire_ephemerals$month <- as.numeric(fire_ephemerals$month)
+
+fire_ephemerals$months <- month.name[(fire_ephemerals$month)]
+
+fire_ephemerals$months <- factor(fire_ephemerals$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+```
+
+## Map fire ephemerals in NSW
+
+```{r}
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = scientificName)) +
+  labs(color = 'Species') +
+  theme_void()
+```
+
+## Map against fire history
+
+```{r}
+#remove records of ephemerals from before 1902 as they do not crossover with fire data
+fire_ephemerals <- fire_ephemerals %>%
+  filter(year > 1901)
+
+#NSW fire dataset actually includes fires in Victoria as well. remove these
+nsw_fires <- st_intersection(fire, nsw)
+
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "black") +
+  geom_sf(data = fire,
+          colour = 'grey60',
+          fill = 'lightgrey') +
+  geom_point(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = scientificName)) +
+  labs(color = 'Species') +
+  scale_color_brewer(palette = 'Dark2') +
+  theme_void()
+
+
+```

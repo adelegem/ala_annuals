@@ -95,7 +95,7 @@ fire_ephemerals <- fire_ephemerals %>%
 nsw_fires <- st_intersection(fire, nsw)
 
 
-ggplot() +
+ephemerals_nsw_map <- ggplot() +
   geom_sf(data = nsw,
           fill = NA,
           colour = "black") +
@@ -109,6 +109,65 @@ ggplot() +
   labs(color = 'Species') +
   scale_color_brewer(palette = 'Dark2') +
   theme_void()
+
+ggsave('maps_graphs/ephemerals_nsw_map.png', ephemerals_nsw_map)
+
+
+```
+
+## Area burnt each year v records
+
+```{r}
+#fire ephemeral records by year
+obs_year <- fire_ephemerals %>% 
+  group_by(scientificName, year) %>%
+  summarise(count = n())
+
+fire <- st_make_valid(fire)
+
+area_year <- fire %>%
+  group_by(StartYear) %>%
+  summarize(sum(AreaHa))
+
+fire %>%
+  group_by(StartYear) %>%
+  summarize(sum(AreaHa)) |>
+  View()
+
+obs_year_recent <- obs_year %>%
+  filter(year > 1999)
+
+area_year_recent <- area_year %>%
+filter(StartYear > 1999)
+
+names(area_year_recent)[2] <- "AreaHa"
+
+
+obs_fires <- ggplot() +
+  geom_bar(data = obs_year_recent, aes(fill = scientificName, y = count, x = year), position = "dodge", stat = "identity") +
+  geom_line(data = area_year_recent, aes(x = StartYear, y = AreaHa/18000, group = 1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_y_continuous(name = "Observations", sec.axis = sec_axis(trans = ~.*18000, 
+                        name = 'Area Burnt',
+                        labels = scales::number_format(scale = 1, accuracy = 1),
+                        breaks = seq(0, 5000000, by = 1000000)))
+
+
+ggsave('maps_graphs/obs_fires.png')
+```
+
+```{r}
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+
 
 
 ```

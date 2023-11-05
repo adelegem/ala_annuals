@@ -1,0 +1,110 @@
+---
+title: "Ntfire"
+format: html
+editor: visual
+---
+
+## NT fires
+
+```{r}
+NT_scars <- st_read("NT_23_firescar/fs2023shp.shp") |> 
+  st_transform(crs = 4326) |> 
+  st_zm()  # Remove Z or M values
+
+
+ggplot() +
+  geom_sf(data = aus, fill = NA, color = 'black') +
+  geom_sf(data = NT_scars, aes(color = month)) +
+  theme_void()
+
+
+```
+
+You can add options to executable code like this
+
+```{r}
+gamba_buffel <- galah_call() |>
+  galah_identify('Andropogon gayanus', 'Cenchrus ciliaris') |>
+  galah_filter(cl22 == c('Western Australia', 'Northern Territory', 'Queensland'),
+               year > 1999) |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+ggplot() +
+  geom_sf(data = aus, fill = NA, color = 'black') +
+  geom_sf(data = NT_scars, color = 'black') + 
+  geom_point(data = gamba_buffel,
+             size = 0.5,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = scientificName)) +
+  scale_color_manual(values = c('#39FF1450','#FF007F50')) +
+  theme_void() +
+  theme(legend.position = 'none')
+
+
+```
+
+```{r}
+Cenchrus polystachios
+
+gamba_buffel_mission <- galah_call() |>
+  galah_identify('Andropogon gayanus', 'Cenchrus ciliaris', 'Cenchrus polystachios') |>
+  galah_filter(cl22 == c('Western Australia', 'Northern Territory', 'Queensland'),
+               year > 1999) |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+ggplot() +
+  geom_sf(data = aus, fill = NA, color = 'black') +
+  geom_sf(data = NT_scars, color = 'black') + 
+  geom_point(data = gamba_buffel_mission,
+             size = 0.5,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = scientificName)) +
+  scale_color_manual(values = c('#39FF1450','#FF007F50', '#DFFF0050')) +
+  theme_void() +
+  theme(legend.position = 'none')
+```
+
+Extinct plants
+
+```{r}
+
+ggplot() +
+  geom_sf(data = aus, fill = NA, color = 'black') +
+  geom_sf(data = NT_scars, color = '#FEC3A6') + 
+  geom_density_2d(data = gamba_buffel, 
+                  aes(x = decimalLongitude, 
+                      y = decimalLatitude), 
+                  color = "blue", alpha = 0.5) +
+  theme_void()
+```
+
+```{r}
+# See what values are within a given field
+search_all(fields, "countryConservation") |>
+  show_values()
+
+galah_call() |> 
+  galah_identify("Plantae") |>
+  galah_filter(countryConservation == c('Extinct', 'Extinct in the wild')) |>
+  galah_group_by(species) |>
+  atlas_counts()
+
+
+extinct_plants <- galah_call() |> 
+  galah_identify("Plantae") |>
+  galah_filter(countryConservation == c('Extinct', 'Extinct in the wild')) |>
+  atlas_occurrences()
+
+
+ggplot() +
+  geom_sf(data = aus, fill = NA, color = 'black') +
+  geom_point(data = extinct_plants, 
+              aes(x = decimalLongitude,
+                  y = decimalLatitude,
+                  color = scientificName)) +
+  theme_void()
+```

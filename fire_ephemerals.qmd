@@ -9,9 +9,15 @@ execute:
   output: true
 ---
 
-## Fire Ephemerals
+## Fire Ephemerals in NSW
 
-Load NSW Fire dataset
+Fire ephemerals are plant species which grow in response to fire, and typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them an advantage in that they grow when competition for resources is reduced and light and nutrients are more abundant. This trait makes them elusive however, with a short window for them to be recorded, which in turn makes [conservation assessment of these species difficult](https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-2_Sept-Nov21_Bell-v1.pdf).
+
+In this post, we will use R code and the galah package to identify the distribution of fire ephemerals in NSW against historical fire data from the National Parks and Wildlife Services Fire History dataset.
+
+### Load packages and NSW Fire dataset
+
+You will need to download the NPWS fire history dataset and save it to your directory. You can access it [here](https://datasets.seed.nsw.gov.au/dataset/fire-history-wildfires-and-prescribed-burns-1e8b6).
 
 ```{r}
 #install.packages("pacman")
@@ -26,6 +32,7 @@ library(ozmaps)
 library(ggthemes)
 library(galah)
 
+#load the dataset, transforming into WGS84 CRS 
 fire <- st_read(here("NPWS_fire", "NPWSFireHistory.shp")) |> 
   st_transform(crs = 4326) |> 
   st_zm()  # Remove Z or M values
@@ -33,12 +40,12 @@ fire <- st_read(here("NPWS_fire", "NPWSFireHistory.shp")) |>
 #add start year
 fire$StartYear <- substr(fire$StartDate, 1, 4)
 
-#some fires have an arbitary 'start year' of 1899 where the start date is unknown, even if they are labelled as '1996-97 wildfire'. replace start year for these records with the year given in the 'Label' field. The fire dataset begins in 1902
+#Some fires have an arbitary 'start year' of 1899 where the start date is unknown, even if they are labelled as '1996-97 wildfire'. replace start year for these records with the year given in the 'Label' field. The fire dataset begins in 1902
 
 fire <-  fire %>%
   mutate(StartYear = ifelse(is.na(StartYear) | StartYear == '1899', substr(Label, 1, 4), StartYear))
 
-#create nswv polygon
+#create nswv polygon using ozmaps package
 sf_oz <- ozmap_data("states") |>
   st_transform(crs = 4326)
 
@@ -49,27 +56,41 @@ nsw <- sf_oz %>%
 
 ## Get distribution data on fire ephemerals in NSW
 
+Based on [this paper](https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-2_Sept-Nov21_Bell-v1.pdf) by Bell, six NSW fire ephemeral species are selected:
+
+1.  Actinotus forsythii
+2.   Monotaxis macrophylla
+3.  Gyrostemon australasicus
+4.  Gyrostemon thesioides
+5.  Androcalva procumbens
+6.  Androcalva rosea
+7.  Commersonia rugosa
+
 ```{r}
-#based on https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-2_Sept-Nov21_Bell-v1.pdf, some NSW fire ephemerals include Actinotus forsythii, Monotaxis macrophylla (endangered), Gyrostemon australasicus, Gyrostemon thesioides (endangered), Androcalva procumbens (vulnerable), Androcalva rosea (endangered), Commersonia rugosa 
 
-
-
+#configure your email to access atlas occurence data from the galah package
 galah_config(email = 'adelegemmell@hotmail.com')
 
-show_all_fields() |>
-  View()
-
-search_fields('status') |>
-  View()
-
+#access ALA occurence data for ephemeral species in NSW
 fire_ephemerals <- galah_call() |>
   galah_identify('Actinotus forsythii', 'Monotaxis macrophylla', 'Gyrostemon australasicus', 'Gyrostemon thesioides', 'Androcalva procumbens', 'Androcalva rosea', 'Commersonia rugosa') |>
   galah_filter(cl22 == 'New South Wales') |>
-  galah_apply_profile(ALA) |>
+  galah_apply_profile(ALA) |> #applies data quality checks
   atlas_occurrences()
 
+
+#you can see all available fields using the show_all_fields commands
+show_all_fields() |>
+  View()
+
+#i want to include conservation status in my analyses, so I can search for fields which relate to this
+search_fields('status') |>
+  View()
+
+#select fields that I want included in my fire_ephemerals dataset
 select <- c(colnames(fire_ephemerals)[1:8], "countryConservation", "stateConservation")
   
+#access ALA occurence data for ephemeral species in NSW, including conservation status
 fire_ephemerals <- galah_call() |>
   galah_identify('Actinotus forsythii', 'Monotaxis macrophylla', 'Gyrostemon australasicus', 'Gyrostemon thesioides', 'Androcalva procumbens', 'Androcalva rosea', 'Commersonia rugosa') |>
   galah_filter(cl22 == 'New South Wales') |>
@@ -77,19 +98,14 @@ fire_ephemerals <- galah_call() |>
   galah_apply_profile(ALA) |>
   atlas_occurrences()
 
+#see occurence counts for each species
 fire_ephemerals %>% 
   group_by(scientificName) %>%
   summarise(count = n())
 
+#apply year column based on 'event date' for comparison with fire history
 fire_ephemerals$year <- substr(fire_ephemerals$eventDate, 1, 4)
 
-fire_ephemerals$month <- substr(fire_ephemerals$eventDate, 6, 7)
-
-fire_ephemerals$month <- as.numeric(fire_ephemerals$month)
-
-fire_ephemerals$months <- month.name[(fire_ephemerals$month)]
-
-fire_ephemerals$months <- factor(fire_ephemerals$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
 ```
 
 ## Map fire ephemerals in NSW
@@ -118,9 +134,11 @@ fire <- st_make_valid(fire)
 
 fire_within_nsw <- st_intersection(fire, nsw)
 
+my_colours <- c("#d62728", "#1f77b4", "#2ca02c", "#6a3d9a", "brown", "#1088b9", "#e377c2")
+
 ggplot() +
   geom_sf(data = nsw,
-          fill = 'beige',
+          fill = '#D2B48C40',
           colour = "darkgrey") +
   geom_sf(data = fire_within_nsw,
           colour = '#FF5A0080',
@@ -130,7 +148,7 @@ ggplot() +
                  y = decimalLatitude,
                  color = scientificName)) +
   labs(title = 'Fire history and fire ephemeral species in NSW', color = 'Species') +
-  scale_color_brewer(palette = 'Set1') +
+  scale_color_manual(values = my_colours) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         text = element_text(family = "Arial"),
@@ -142,26 +160,15 @@ ggsave('maps_graphs/ephemerals_nsw_map.png')
 
 ```
 
-## Area burnt each year v records
+## Comparing area burnt to observations each year from 2013
+
+Since fire ephemerals grow after fire events, we would expect to see a greater number of observations after fire. This code compares observations each year from 2013 to area burnt by fire in NSW. This found that no observations of Gyrostemon australasicus have been made after 2013, and as expected that observations of fire ephemerals increase after large fire events, particularly the 2019-2020 bushfires.
 
 ```{r}
-
-#font_import()
-#loadfonts()
-
 #fire ephemeral records by year
 obs_year <- fire_ephemerals %>% 
   group_by(scientificName, year) %>%
   summarise(count = n())
-
-#only 1 Gyrostemon australasicus	record in NSW after 2000
-obs_year_recent <- obs_year %>%
-  filter(year > 1999, scientificName != 'Gyrostemon australasicus') 
-
-obs_year_recent %>%
-  group_by(scientificName) %>%
-  summarise(count = n())
-
 
 area_year <- fire %>%
   group_by(StartYear) %>%
@@ -174,8 +181,8 @@ filter(StartYear > 1999) %>%
 
 names(area_year_recent)[2] <- "AreaHa"
 
-obs_fire <-  ggplot() +
-  geom_bar(data = obs_year_recent[obs_year_recent$year > 2012, ], aes(fill = scientificName, y = count, x = year), position = "dodge", stat = "identity") +
+ggplot() +
+  geom_bar(data = obs_year[obs_year$year > 2012, ], aes(fill = scientificName, y = count, x = year), position = "dodge", stat = "identity") +
   geom_line(data = area_year_recent[area_year_recent$StartYear > 2012, ], aes(x = StartYear, y = AreaHa/18000, group = 1), size = 1, alpha = 0.7) +
   labs(title = 'Fire area & fire ephemerals observations in NSW', fill = 'Species') +
   theme_fivethirtyeight() +
@@ -185,11 +192,9 @@ obs_fire <-  ggplot() +
                         labels = scales::number_format(scale = 1, accuracy = 1),
                         breaks = seq(0, 5000000, by = 1000000))) 
 
-
-obs_fire
-
-ggsave('maps_graphs/obs_fires.png')
 ```
+
+## Density graphs - depicting regions of higher concentrations of ephemerals
 
 ```{r}
 
@@ -240,21 +245,9 @@ ggplot() +
 
 ```
 
+## Investigating observation sources over the years
+
 ```{r}
-fire_ephemerals %>%
-  filter(year > 1999) %>%
-ggplot() +
-  geom_bar(aes(x = year, fill = dataResourceName)) +
-  theme_fivethirtyeight() +
-  theme(axis.title = element_text(), axis.text.x = element_text(angle = 90, hjust = 1))
-
-
-fire_ephemerals %>%
-  filter(year > 1999) %>%
-  group_by(dataResourceName, scientificName) %>%
-  summarise(count = n()) |>
-  arrange(desc(count))
-
 
 data_count <- fire_ephemerals %>%
   filter(year > 1999) %>%
@@ -277,6 +270,8 @@ fire_ephemerals %>%
 
 ggsave('maps_graphs/obs_source_2013.png')
 ```
+
+## Investigating observation sources for each species
 
 ```{r}
 fire_ephemerals %>%

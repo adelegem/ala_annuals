@@ -1,7 +1,12 @@
 ---
 title: "fire_ephemerals"
-format: html
+format:
+  html:
+    embed-resources: true
 editor: visual
+execute:
+  warning: false
+  output: true
 ---
 
 ## Fire Ephemerals
@@ -272,6 +277,7 @@ fire_ephemerals %>%
 
 ggsave('maps_graphs/obs_source_2013.png')
 ```
+
 ```{r}
 fire_ephemerals %>%
   filter(year > 2012) %>%

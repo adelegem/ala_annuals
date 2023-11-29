@@ -59,7 +59,7 @@ nsw <- sf_oz %>%
 Based on [this paper](https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-2_Sept-Nov21_Bell-v1.pdf) by Bell, six NSW fire ephemeral species are selected:
 
 1.  Actinotus forsythii
-2.   Monotaxis macrophylla
+2.  Monotaxis macrophylla
 3.  Gyrostemon australasicus
 4.  Gyrostemon thesioides
 5.  Androcalva procumbens
@@ -141,19 +141,19 @@ ggplot() +
           fill = '#D2B48C40',
           colour = "darkgrey") +
   geom_sf(data = fire_within_nsw,
-          colour = '#FF5A0080',
+          colour = NA,
           fill = '#FF5A0020') +
   geom_point(data = fire_ephemerals,
              aes(x = decimalLongitude,
                  y = decimalLatitude,
                  color = scientificName)) +
-  labs(title = 'Fire history and fire ephemeral species in NSW', color = 'Species') +
+  labs(title = 'Fire ephemeral species in NSW', color = 'Species') +
   scale_color_manual(values = my_colours) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
-        text = element_text(family = "Arial"),
+        text = element_text(family = "montserrat"),
         legend.position = "right",
-        plot.title = element_text(size = 15, hjust = 0.5))
+        plot.title = element_text(size = 12, hjust = 0.5))
 
 ggsave('maps_graphs/ephemerals_nsw_map.png')
 
@@ -201,33 +201,48 @@ ggplot() +
 library(ggpointdensity)
 library(ggplot2)
 library(viridis)
+install.packages('emoGG')
+library(showtext)
+devtools::install_github("dill/emoGG")
+library(emoGG)
+library(magrittr)
+
+
+font_add_google("Montserrat", "montserrat")
+showtext_auto()
 
 ggplot() +
   geom_sf(data = nsw,
-          fill = 'beige',
+          fill = 'white',
           colour = "darkgrey") +
   geom_sf(data = fire_within_nsw,
-          colour = '#FF5A0080',
-          fill = '#FF5A0020') +
+          colour = NA,
+          fill = '#FF5A0040') +
   geom_pointdensity(data = fire_ephemerals,
              aes(x = decimalLongitude,
-                 y = decimalLatitude)) +
-  labs(title = 'Fire history and fire ephemerals in NSW', color = 'Observations') +
-  scale_color_gradient(high = '#05450e', low = '#30d148') + 
+                 y = decimalLatitude,
+                 shape = scientificName)) +
+  labs(title = "Fire Ephemerals in NSW", color = 'Observations', shape = 'Species') +
+  scale_color_gradient(high = 'red', low = 'blue') + 
+  scale_shape_manual(values = c(2:8)) +
+  scale_fill_manual(name = "Legend Title", 
+                    values = c('Fire within NSW' = '#FF5A0040'), 
+                    guide = guide_legend(override.aes = list(shape = NA))) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         legend.position = "right",
-        text = element_text(family = "Arial", size = 16))
+        text = element_text(family = "montserrat"),
+        plot.title = element_text(size = 16, hjust = 0.5))
 
-ggsave('maps_graphs/ephemeral_density.png')
+ggsave('maps_graphs/ephemeral_density1.png')
 
 ggplot() +
   geom_sf(data = nsw,
-          fill = 'beige',
+          fill = 'white',
           colour = "darkgrey") +
   geom_sf(data = fire_within_nsw,
-          colour = '#FF5A0080',
-          fill = '#FF5A0020') +
+          colour = NA,
+          fill = '#FF5A0040') +
   stat_density_2d(data = fire_ephemerals,
                  contour = TRUE,
              aes(x = decimalLongitude,
@@ -241,7 +256,7 @@ ggplot() +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         legend.position = "right",
-        text = element_text(family = "Arial", size = 14))
+        text = element_text(family = "Roboto", size = 14))
 
 ```
 
@@ -306,10 +321,519 @@ fire_ephemerals %>%
 ```
 
 ```{r}
+fire_ephemerals_sf <- fire_ephemerals %>% 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude")) 
 
+st_crs(fire_ephemerals_sf) <- st_crs(4326)
 
+densities <- density(fire_ephemerals$decimalLongitude, fire_ephemerals$decimalLatitude)
+
+# Merge the densities with the original data based on row numbers
+your_data <- cbind(your_data, densities)
+```
+
+```{r}
+library(scales)
+
+map  <- ggplot() +
+  geom_sf(data = nsw,
+          fill = 'white',
+          colour = "darkgrey") +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_pointdensity(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude)) +
+  labs(title = "Fire Ephemerals in NSW", color = 'Observations', shape = 'Species') +
+  scale_color_gradient(high = 'black', low = 'grey') + 
+  scale_fill_manual(name = "Legend Title", 
+                    values = c('Fire within NSW' = '#FF5A0040'), 
+                    guide = guide_legend(override.aes = list(shape = NA))) +
+  theme_map() +
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "right",
+        text = element_text(family = "montserrat"),
+        plot.title = element_text(size = 16, hjust = 0.5),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10))
+
+map
 
 ```
 
 ```{r}
+pacman::p_load(tidyverse, here, rmapshaper, sf, ggpointdensity, viridis, ozmaps, concaveman, cowplot, patchwork)
+library(tidyverse)
+
+ephemerals_nest <- fire_ephemerals %>%
+  select(decimalLatitude, decimalLongitude, scientificName) %>%
+  nest(coords = c(decimalLongitude, decimalLatitude))
+
+
+ephemerals_concave <- ephemerals_nest %>%
+    mutate(points_sf = map(.x = coords,
+                           ~ st_as_sf(.x, coords = c("decimalLongitude", "decimalLatitude"),
+                                      crs = 4326)), 
+           concave_sf = map(points_sf,
+                            ~ concaveman(.x)))
+  
+ephemerals_concave <- ephemerals_concave %>%
+  select(scientificName, concave_sf) %>%
+  unnest(cols = c(concave_sf)) %>%
+  ungroup() %>%
+  st_sf(crs = 4326)
+
+
+ ggplot() + 
+  geom_sf(data = nsw, colour = "darkgrey", fill = NA) +
+  geom_sf(data = ephemerals_concave, alpha = 0.3, aes(fill = scientificName)) +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  labs(title = "Fire Ephemerals in NSW", color = 'Density', fill = 'Species') +
+  geom_pointdensity(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude)) +
+  scale_color_gradient(high = '#0d0c0c60', low = '#0d0c0c20') +
+  theme_void() 
+ 
+
+```
+
+```{r}
+
+fire_ephemerals$scientificName <- factor(fire_ephemerals$scientificName, levels=c("Monotaxis macrophylla", "Gyrostemon thesioides", "Gyrostemon australasicus", "Commersonia rugosa", "Androcalva rosea", "Androcalva procumbens", "Actinotus forsythii"))
+
+fire_ephemerals %>%
+  group_by(scientificName) %>%
+  summarise(count = n())
+
+bar <- ggplot(fire_ephemerals) +
+  geom_bar(aes(x = scientificName,
+           fill = scientificName)) +
+  labs(x = ' ', y = ' ') +
+   scale_x_discrete(labels = label_wrap(10)) +
+   scale_y_discrete(breaks = c("200", "400")) +
+  theme(legend.position = 'none') +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),  
+    panel.border = element_blank(),      
+    axis.line = element_blank(),
+    panel.background = element_rect(fill = "transparent", color = NA),
+    plot.background = element_rect(fill = 'transparent', color = NA),
+    axis.ticks.x = element_blank(),
+    axis.ticks.y = element_blank()) +
+  coord_flip() +
+  scale_y_reverse()
+```
+
+```{r}
+library(cowplot)
+
+#so that font works?
+set_null_device("png")
+
+
+ggdraw(map) +
+  draw_plot(bar, 
+            x = 0.54, 
+            y = 0.05, 
+            width = 0.20, 
+            height = 0.42)
+
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = nsw,
+          fill = 'white',
+          colour = "darkgrey") +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_pointdensity(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude)) +
+  labs(title = "Fire Ephemerals in NSW", color = 'Observations', shape = 'Species') +
+  scale_color_gradient(high = '#0a0a0a', low = '#0a0a0a40') + 
+  scale_fill_manual(name = "Legend Title", 
+                    values = c('Fire within NSW' = '#FF5A0040'), 
+                    guide = guide_legend(override.aes = list(shape = NA))) +
+  theme_map() +
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "right",
+        text = element_text(family = "montserrat"),
+        plot.title = element_text(size = 16, hjust = 0.5),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10))
+
+get("compute_group", ggplot2::StatDensity)
+
+
+
+function (data, scales, bw = "nrd0", adjust = 1, kernel = "gaussian", 
+    n = 512, trim = FALSE, na.rm = FALSE, bounds = c(-Inf, Inf), 
+    flipped_aes = FALSE) 
+{
+    data <- flip_data(data, flipped_aes)
+    if (trim) {
+        range <- range(data$x, na.rm = TRUE)
+    }
+    else {
+        range <- scales[[flipped_names(flipped_aes)$x]]$dimension()
+    }
+    density <- compute_density(data$x, data$weight, from = range[1], 
+        to = range[2], bw = bw, adjust = adjust, kernel = kernel, 
+        n = n, bounds = bounds)
+    density$flipped_aes <- flipped_aes
+    flip_data(density, flipped_aes)
+}
+```
+
+```{r}
+ ggplot() +
+  geom_bar(data = fire_ephemerals, 
+           aes(x = scientificName, fill = scientificName)) +
+  labs(x = ' ', y = ' ') +
+   scale_x_discrete(labels = label_wrap(10)) +
+   scale_y_discrete(breaks = c("200", "400")) +
+  theme(legend.position = 'none') +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),  
+    panel.border = element_blank(),      
+    axis.line = element_blank(),
+    panel.background = element_rect(fill = "transparent", color = NA),
+    plot.background = element_rect(fill = 'transparent', color = NA),
+    axis.ticks.x=element_blank())
+ 
+
+```
+
+```{r}
+install.packages('ggstream')
+library(ggstream)
+devtools::install_github("hrbrmstr/streamgraph")
+library(streamgraph)
+
+obs_year_recent <- obs_year %>%
+  filter(year > 1999)
+names <- unique(obs_year_recent$scientificName)
+years <- 2000:2023
+
+obs <- crossing(scientificName = names,
+                  year = years)
+
+merged <- merge(obs, obs_year_recent, by = c("scientificName", "year"), all.x = TRUE)
+merged$count[is.na(merged$count)] <- 0
+
+merged_obs <- merged %>%
+  group_by(scientificName) %>%
+  mutate(cumulative_count = cumsum(count)) %>%
+  ungroup()
+
+fire_palette <- c("#FFD700", "#FFA500", "#FF7F50", "#FF6347", "#FF4500", "#FF0000", "#DC143C")
+
+font_add_google("Roboto", "Roboto")
+showtext_auto()
+
+ggplot(merged_obs, 
+       aes(x = year,
+           y = cumulative_count,
+           fill = scientificName)) +
+  geom_stream(type = 'ridge') +
+  scale_fill_manual(values = fire_palette) +
+  labs(x = 'year', y = 'total observations', fill = 'species') +
+  theme_classic() +
+  theme(text = element_text(family = 'montserrat'))
+
+
+streamgraph(merged_obs, key="scientificName", value="cumulative_count", date="year", offset = 'zero')
+
+
+```
+
+d
+
+```{r}
+dens_plot <- ggplot(merged_obs, 
+       aes(x = year,
+           y = count,
+           fill = scientificName)) +
+  geom_stream(type = 'ridge', alpha = 0.9) +
+  scale_fill_manual(values = fire_palette) +
+  labs(x = 'year', y = 'total observations', fill = 'species') +
+  theme_classic() +
+  theme(text = element_text(family = 'montserrat'),
+        legend.position = 'none')
+
+dens_plot
+```
+
+```{r}
+
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = 'white',
+          colour = "darkgrey") +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_pointdensity(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude),
+             shape = 17) +
+  scale_color_gradient(high = '#03450f', low = '#8af29d') +
+  theme_map() +
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "none",
+        text = element_text(family = "montserrat"),
+        plot.title = element_text(size = 16, hjust = 0.5)) +
+  coord_sf(ylim = c(-39, -28),
+           xlim = c(130, 154)) 
+
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = 'white',
+          colour = "darkgrey") +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_pointdensity(data = fire_ephemerals,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude),
+             shape = 17) +
+  scale_color_gradient(high = '#03450f', low = '#8af29d') +
+  theme_map() +
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "none",
+        text = element_text(family = "montserrat")
+```
+
+```{r}
+if (!require("rspat")) remotes::install_github("rspatial/rspat")
+library(rspat)
+install.packages('spatstat')
+library(spatstat)
+install.packages('ghibli')
+library(ghibli)
+
+target_crs <- st_crs("+init=epsg:28356")
+
+# Reproject the spatial object to the target projected CRS
+fire_ephemerals_sf_MGA56 <- st_transform(fire_ephemerals_sf, crs = target_crs)
+nsw_MGA56 <- st_transform(nsw, crs = target_crs)
+fire_within_NSW_MGA56 <- st_transform(fire_within_nsw, crs = target_crs)
+
+
+st_crs(fire_ephemerals_sf_MGA56)
+
+ephemerals_ppp <- as.ppp(fire_ephemerals_sf_MGA56$geometry, W = as.owin(nsw_MGA56))
+
+plot(ephemerals_ppp)
+
+density_ephemerals_stars <- stars::st_as_stars(density(ephemerals_ppp, dimyx = 300))
+
+plot(density_ephemerals_stars)
+
+ephemerals_density <- st_as_sf(density_ephemerals_stars) %>%
+  st_set_crs(target_crs)
+
+custom_palette <- c("#f29bc7", "#33a02c", "#c932b5", "green", "#e66739", "#14a322", "#9dc4a1")
+
+dens_map <- ggplot() +
+  geom_sf(data = ephemerals_density, aes(fill = v), color = NA) +
+  geom_sf(data = nsw_MGA56, fill = NA, color = "black", linewidth = 0.25) +
+  scale_fill_gradientn(colours = c("#fef0d9", '#fdcc8a', "#fc8d59", "#d7301f"), guide = 'none') +
+  geom_sf(data = fire_ephemerals_sf_MGA56, aes(color = scientificName), shape = 17) +
+  scale_color_manual(values = custom_palette) +
+  labs(color = 'Species') +
+  theme_map() +
+  theme(text = element_text(family = 'montserrat', size = 11),
+        legend.position = 'top')
+
+dens_map
+
+```
+
+```{r}
+green_palette <- c("#ffbaf8", "#05fc0e", "#0a5c03", "#b439cc", "#42dfed","#0e02e3", "#f2020e")
+
+
+ggplot() +
+  geom_sf(data = nsw, fill = NA, color = "black", linewidth = 0.25) +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_sf(data = fire_ephemerals_sf, aes(fill = scientificName), color = 'black', pch = 21, stroke = 0.5, size = 2) +
+  labs(fill = 'Species') +
+  scale_fill_manual(values = green_palette) +
+  theme_map() +
+  theme(text = element_text(family = 'montserrat', size = 11))
+
+```
+
+```{r}
+custom_palette2 <- c("#f29bc7", "#1097b5", "#c932b5", "#66a5ed", "#e66739", "#025061", "#731482")
+
+ggplot() +
+  geom_sf(data = ephemerals_density, aes(fill = v), color = NA) +
+  geom_sf(data = nsw_MGA56, fill = NA, color = "black", linewidth = 0.25) +
+  scale_fill_gradientn(colours = c("#edf8fb", '#b2e2e2', "#66c2a4", "#238b45"), guide = 'none') +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_sf(data = fire_ephemerals_sf_MGA56, aes(color = scientificName), shape = 17) +
+  scale_color_manual(values = custom_palette2) +
+  labs(color = 'Species') +
+  theme_map() +
+  theme(text = element_text(family = 'montserrat', size = 11))
+```
+
+```{r}
+
+ggplot() +
+  geom_sf(data = ephemerals_density, aes(fill = v), color = NA) +
+  geom_sf(data = nsw_MGA56, fill = NA, color = "black", linewidth = 0.25) +
+  scale_fill_gradientn(colours = c("#fef0d9", '#fdcc8a', "#fc8d59", "#d7301f"), guide = 'none') +
+  geom_sf(data = fire_ephemerals_sf_MGA56, aes(color = scientificName), shape = 17) +
+  scale_color_manual(values = custom_palette) +
+  labs(color = 'Species') +
+  theme_map() +
+  theme(text = element_text(family = 'montserrat', size = 11)) +
+  coord_sf(ylim = c(5500000, 7000000),
+           xlim = c(-800000, 600000)) 
+
+nsw_MGA56$geometry
+```
+
+```{r}
+ephemeral_density_WGS <- ephemerals_density %>% 
+  st_transform(crs = 4326)
+install.packages('ggtext')
+library(ggtext)
+#dens_map_WGS <-
+ ggplot() +
+  geom_sf(data = ephemeral_density_WGS, aes(fill = v), color = NA) +
+  geom_sf(data = nsw, fill = NA, color = "black", linewidth = 0.25) +
+  scale_fill_gradientn(colours = c("#fef0d9", '#fdcc8a', "#fc8d59", "#d7301f"), guide = 'none') +
+  geom_sf(data = fire_ephemerals_sf, aes(color = scientificName), shape = 17) +
+  scale_color_manual(values = custom_palette) +
+  labs(color = 'Species') +
+  theme(text = element_text(family = 'montserrat', size = 10),
+        legend.position = 'none') +
+  coord_sf(ylim = c(-28.15703, -45),
+           xlim = c(115, 153.6299)) +
+   annotate(geom = "text", y = -30, x = 124, 
+           label = "Fire Ephemerals \n in NSW", 
+           hjust = "middle", family = 'montserrat', fontface = "bold", size = 8, 
+           color = "#d7301f") +
+   ggtext::geom_textbox(aes(x = 125, y = -39),
+                        label = "Fire ephemerals are plant species which typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them a competitive advantage, but makes them elusive, with a short window time for observations to be made, posing difficulties for conservation assessments",
+                       family = 'montserrat',
+                       box.color = NA,
+                       fill = NA,
+                       lineheight = 1.5,
+                       size = 3) #+
+   theme(panel.grid = element_blank(),
+         panel.background = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_blank())
+
+dens_map_WGS
+```
+
+```{r}
+library(cowplot)
+
+ggdraw(dens_map_WGS) +
+  draw_plot(dens_plot,
+            x = 0.42, y = 0,
+            width = 0.37, height = 0.35)
+
+```
+
+```{r}
+
+#nsw$geometry
+#Geometry set for 1 feature 
+#Geometry type: MULTIPOLYGON
+#Dimension:     XY
+#Bounding box:  xmin: 140.9993 ymin: -37.50503 xmax: 153.6299 ymax: -28.15703
+#Geodetic CRS:  WGS 84
+
+ ggplot() +
+  geom_sf(data = ephemeral_density_WGS, aes(fill = v), color = NA) +
+  geom_sf(data = nsw, fill = NA, color = "black", linewidth = 0.25) +
+  scale_fill_gradientn(colours = c("#fef0d9", '#fdcc8a', "#fc8d59", "#d7301f"), guide = 'none') +
+  geom_sf(data = fire_ephemerals_sf, aes(color = scientificName), shape = 17) +
+  scale_color_manual(values = custom_palette) +
+  labs(color = 'Species') +
+  theme(text = element_text(family = 'montserrat', size = 10),
+        legend.position = 'none') +
+  coord_sf(ylim = c(-24, -41),
+           xlim = c(125, 153.6299)) +
+   annotate(geom = "text", y = -27, x = 132, 
+           label = "Fire Ephemerals \n in NSW", 
+           hjust = "middle", family = 'montserrat', fontface = "bold", size = 8, 
+           color = "#d7301f") +
+   ggtext::geom_textbox(aes(x = 132, y = -34),
+                        label = "Fire ephemerals are plant species which typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them a competitive advantage, but makes them elusive, with a short window time for observations to be made, posing difficulties for conservation assessments",
+                       family = 'montserrat',
+                       box.color = NA,
+                       fill = NA,
+                       lineheight = 1.5,
+                       size = 3) +
+   theme(panel.grid = element_blank(),
+         panel.background = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_blank())
+   
+   nsw$geometry
+```
+
+```{r plot-wider, fig.width=12, fig.height=8}
+
+font_add_google(name = "Comfortaa", family = "Comfortaa")
+
+ggplot() +
+  geom_sf(data = nsw, fill = 'white', color = "black", linewidth = 0.25) +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_sf(data = fire_ephemerals_sf, aes(fill = scientificName), color = 'black', pch = 21, stroke = 0.5) +
+  labs(fill = 'Species') +
+  scale_fill_manual(values = green_palette) +
+  theme(text = element_text(family = 'montserrat', size = 25)) +
+  coord_sf(ylim = c(-24, -41),
+           xlim = c(125, 153.6299)) +
+   annotate(geom = "text", y = -27, x = 132, 
+           label = "Fire Ephemerals in NSW", 
+           hjust = "middle", family = 'Comfortaa', fontface = "bold", size = 32, 
+           color = "#d7301f") +
+   ggtext::geom_textbox(aes(x = 132, y = -35),
+                        label = "Fire ephemerals are plant species which typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them a competitive advantage, but makes them elusive, with a short window time for observations to be made, posing difficulties for conservation assessments",
+                       family = 'montserrat',
+                       box.color = NA,
+                       fill = NA,
+                       lineheight = 1,
+                       size = 12,
+                       width = unit(17, "lines"),
+                       hjust = 0.5) +
+   theme(panel.grid = element_blank(),
+         panel.background = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_blank(),
+         plot.background = element_rect(fill = "white", color = NA))
+
+ggsave('maps_graphs/test.png', width = 12, height = 8, dpi = 320)
 ```

@@ -1,0 +1,62 @@
+"0","ggplot() +
+  geom_sf(data = nsw, fill = 'white', color = ""black"", linewidth = 0.25) +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_sf(data = fire_ephemerals_sf, aes(fill = scientificName), color = 'black', pch = 21, stroke = 0.5) +
+  labs(fill = 'Species') +
+  scale_fill_manual(values = green_palette) +
+  theme(text = element_text(family = 'montserrat', size = 25)) +
+  coord_sf(ylim = c(-24, -41),
+           xlim = c(125, 153.6299)) +
+   annotate(geom = ""text"", y = -27, x = 132, 
+           label = ""Fire Ephemerals in NSW"", 
+           hjust = ""middle"", family = 'Comfortaa', fontface = ""bold"", size = 32, 
+           color = ""#d7301f"") +
+   ggtext::geom_textbox(aes(x = 132, y = -35),
+                        label = ""Fire ephemerals are plant species which typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them a competitive advantage, but makes them elusive, with a short window time for observations to be made, posing difficulties for conservation assessments"",
+                       family = 'montserrat',
+                       box.color = NA,
+                       fill = NA,
+                       lineheight = 1,
+                       size = 12,
+                       width = unit(17, ""lines""),
+                       hjust = 0.5) +
+   theme(panel.grid = element_blank(),
+         panel.background = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_blank(),
+         plot.background = element_rect(fill = ""white"", color = NA))
+ggplot() +
+  geom_sf(data = nsw, fill = 'white', color = ""black"", linewidth = 0.25) +
+  geom_sf(data = fire_within_nsw,
+          colour = NA,
+          fill = '#FF5A0040') +
+  geom_sf(data = fire_ephemerals_sf, aes(fill = scientificName), color = 'black', pch = 21, stroke = 0.5) +
+  labs(fill = 'Species') +
+  scale_fill_manual(values = green_palette) +
+  theme(text = element_text(family = 'montserrat', size = 25)) +
+  coord_sf(ylim = c(-24, -41),
+           xlim = c(125, 153.6299)) +
+   annotate(geom = ""text"", y = -27, x = 132, 
+           label = ""Fire Ephemerals in NSW"", 
+           hjust = ""middle"", family = 'Comfortaa', fontface = ""bold"", size = 32, 
+           color = ""#d7301f"") +
+   ggtext::geom_textbox(aes(x = 132, y = -35),
+                        label = ""Fire ephemerals are plant species which typically have short life spans, growing, flowering seeding, and dying after fire events. This unique life history trait gives them a competitive advantage, but makes them elusive, with a short window time for observations to be made, posing difficulties for conservation assessments"",
+                       family = 'montserrat',
+                       box.color = NA,
+                       fill = NA,
+                       lineheight = 1,
+                       size = 12,
+                       width = unit(17, ""lines""),
+                       hjust = 0.5) +
+   theme(panel.grid = element_blank(),
+         panel.background = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_blank(),
+         plot.background = element_rect(fill = ""white"", color = NA))
+"
+"0","ggsave('maps_graphs/test.png', width = 12, height = 8, dpi = 320)"

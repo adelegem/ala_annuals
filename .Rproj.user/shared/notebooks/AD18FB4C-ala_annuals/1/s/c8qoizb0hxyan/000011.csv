@@ -1,5 +1,0 @@
-"0","ast_annual_df$ala <- ast_annual_ala$scientificName %in% ast_annual
-"
-"2","Error in `$<-.data.frame`(`*tmp*`, ala, value = c(TRUE, TRUE, TRUE, TRUE,  : 
-  replacement has 836719 rows, data has 631
-"

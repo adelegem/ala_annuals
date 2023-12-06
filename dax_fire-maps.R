@@ -113,20 +113,14 @@ overlap_nested <- concave_nested |>
          percent_overlap = map2(.x = overlap_area,
                                 .y = concave_sf,
                                 possibly(~ (.x / st_area(.y))*100))) |>
-  tidyr::unnest(cols = c(overlap_area, percent_overlap))
-
-# Edit some names for mapping
-map_data <- overlap_nested |> 
-  select(genus, overlap_area, percent_overlap, points_sf, concave_sf, overlap_sf) |> 
-  tidyr::unnest() |> 
-  rename(points = geometry, 
-         concave = polygons, 
-         overlap = overlap_sf) 
-
+  tidyr::unnest(cols = c(overlap_sf, overlap_area, percent_overlap))
 
 # ---
 
 ## MAPS
+
+# Set an experimental, planty colour palette (edit this if you want)
+my_colours <- c("#1D2B12", "#3B7009", "#9E701B")
 
 # Map 1: Eastern Australia + fire extent
 # NOTE: Maybe it's worth highlighting NSW border?
@@ -139,13 +133,12 @@ ggplot() +
           colour = NA,
           fill = '#FF925C',
           alpha = 0.4) +
-  geom_sf(data = overlap,
+  geom_sf(data = overlap_nested,
         aes(geometry = overlap_sf,
             colour = NA,
             ),
         colour = "#FF925C", fill = "#FF925C",
         alpha = 0.8) +
-  scale_color_manual(values = my_colours) +
   theme_map() +
   coord_sf(xlim = c(135, 158)) +
   theme(plot.background = element_rect(fill = "white", color = NA))
@@ -154,8 +147,7 @@ ggplot() +
 # Map 2: NSW with observations (split by genus)
 # NOTE: Legend should be removed eventually
 
-# Set an experimental, planty colour palette (edit this if you want)
-my_colours <- c("#1D2B12", "#3B7009", "#9E701B")
+
 
 ggplot() +
   geom_sf(data = nsw,
@@ -175,8 +167,7 @@ ggplot() +
   scale_color_manual(values = my_colours) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
-        # text = element_text(family = "Arial"),
-        legend.position = "right",
-        # plot.title = element_text(size = 15, hjust = 0.5)
+        legend.position = "right"
+        # legend.position = "none" # replace the above eventually
   )
 

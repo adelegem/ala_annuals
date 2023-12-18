@@ -23,6 +23,12 @@ fire$StartYear <- substr(fire$StartDate, 1, 4)
 fire <-  fire %>%
   mutate(StartYear = ifelse(is.na(StartYear) | StartYear == '1899', substr(Label, 1, 4), StartYear))
 
+fire %>%
+  filter(StartYear > 2007) %>%
+  group_by(StartYear) %>%
+  summarise(Total_AreaBurnt = sum(AreaHa)) %>%
+  arrange(desc(Total_AreaBurnt))
+
 
 fire <- st_make_valid(fire) # make sure polygons are valid
 fire_within_nsw <- st_intersection(fire, nsw) # crop to fire within nsw
@@ -114,8 +120,9 @@ aus_fire <- ggplot() +
           ),
           colour = "#FF925C", fill = "#FF925C",
           alpha = 0.8) +
-  theme_map() +
-  coord_sf(xlim = c(135, 158)) 
+  theme_map() 
+#+
+# coord_sf(xlim = c(135, 158)) 
 #+
 #  theme(plot.background = element_rect(fill = "white", color = NA))
 
@@ -151,22 +158,22 @@ eph_map
 
 #fire ephemeral records by year
 obs_year <- fire_ephemerals %>% 
-  group_by(scientificName, year) %>%
+  group_by(genus, year) %>%
   summarise(count = n())
 
 obs_year_recent <- obs_year %>%
-  filter(year > 1999)
-names <- unique(obs_year_recent$scientificName)
-years <- 2000:2023
+  filter(year > 2007)
+names <- unique(obs_year_recent$genus)
+years <- 2008:2023
 
-obs <- crossing(scientificName = names,
+obs <- crossing(genus = names,
                 year = years)
 
-merged <- merge(obs, obs_year_recent, by = c("scientificName", "year"), all.x = TRUE)
+merged <- merge(obs, obs_year_recent, by = c("genus", "year"), all.x = TRUE)
 merged$count[is.na(merged$count)] <- 0
 
 merged_obs <- merged %>%
-  group_by(scientificName) %>%
+  group_by(genus) %>%
   mutate(cumulative_count = cumsum(count)) %>%
   ungroup()
 
@@ -177,21 +184,36 @@ fire_palette <- c("#FFD700", "#FFA500", "#FF6347", "#FF4500", "#FF0000")
 library(showtext)
 font_add_google("Roboto", "Roboto")
 showtext_auto()
+install.packages('pilot')
+library(pilot)
+install.packages('ggdist')
+library(ggdist)
 
 
 dens_plot <- ggplot(merged_obs, 
                     aes(x = year,
                         y = count,
-                        fill = scientificName)) +
+                        fill = genus)) +
   geom_stream(type = 'ridge', alpha = 0.9) +
-  scale_fill_manual(values = fire_palette) +
-  labs(x = 'year', y = 'total observations', fill = 'species') +
+  geom_vline(xintercept = 2019, linetype ='longdash', col = 'grey55') +
+  annotate("text", x = 2019, y = 200, label = "Black Summer \nbushfires begin", fontface = 'bold', hjust = 1.1, size = 7, col = 'grey55', lineheight = 0.5) +
+  annotate("curve", x = 2019, xend = 2018,
+           y = 150, yend = 180,
+           curvature = -.6,
+           color = "grey55",
+           size = 0.6,
+           alpha = 0.8,
+           arrow = arrow(length = unit(0.05, "inches"), type = "closed")) +
+  scale_fill_manual(values = my_colours) +
+  labs(x = 'year', y = 'observations') +
   theme_classic() +
-  theme(text = element_text(family = 'Roboto', size = 25)) +
+  theme(text = element_text(family = 'Roboto', size = 28)) +
   theme(plot.background = element_rect(fill = NA, color = NA),
-        legend.background = element_blank())
+        legend.background = element_blank(),
+        legend.position = 'none') 
 
 dens_plot
+
 
 
 ##MAKING THE BIG OL' PAGE OF MAPS AND GRAPHS 
@@ -226,21 +248,21 @@ main <- ggplot() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         legend.position = "none"
   ) +
-  coord_sf(ylim = c(-24, -41),
-            xlim = c(124, 153.6299)) +
-  annotate(geom = "text", y = -27, x = 137, 
+  coord_sf(ylim = c(-23, -41),
+            xlim = c(140, 170)) +
+  annotate(geom = "text", y = -26.5, x = 152, 
            label = "Fire Ephemerals in NSW", 
-           hjust = "middle", family = 'Work Sans',  size = 45, 
+           hjust = "middle", family = 'Raleway',  size = 60, 
            lineheight = 0.5,
            color = "#65a650") +
-  ggtext::geom_textbox(aes(x = 134.25, y = -31.5),
+  ggtext::geom_textbox(aes(x = 162, y = -31.5),
                        label = paste0("Fire ephemerals are elusive species, with short life spans that grow following fire events. In NSW, fire ephemerals include species in the <span style=\"color:#FFD700\">**Actinotus**</span>, <span style=\"color:#FFA500\">**Gyrostemon**</span>, and <span style=\"color:#FF0000\">**Androcalva**</span> genera - but there remain few observations of these species posing difficulties for conservation assessments."),
-                       family = 'montserrat',
+                       family = 'Work Sans',
                        box.color = NA,
                        fill = NA,
                        lineheight = 0.75,
                        size = 12,
-                       width = unit(21, "lines"),
+                       width = unit(23, "lines"),
                        hjust = 0.5) +
   theme(panel.grid = element_blank(),
         panel.background = element_blank(),
@@ -258,18 +280,19 @@ library(cowplot)
 
 ggdraw(main) +
   draw_plot(aus_fire, 
-            x = 0, y = 0.4, 
-            width = 0.25, height = 0.5) 
+            x = 0.78, y = 0.66, 
+            width = 0.2, height = 0.2) 
 
 ggsave('maps_graphs/test2.png', width = 12, height = 8, dpi = 320)
-
+s
 ggdraw(main) +
   draw_plot(aus_fire, 
-            x = 0, y = 0.4, 
-            width = 0.25, height = 0.5) +
-  draw_plot(dens_plot, 
-            x = 0.15, y = 0.1,
-            width = 0.6, height = 0.3)
+            x = 0.75, y = 0.66, 
+            width = 0.2, height = 0.2) +
+  draw_plot(dens_plot,
+            x = 0.5, y = 0.05,
+            width = 0.4, height = 0.3)
 
 ggsave('maps_graphs/test3.png', width = 12, height = 8, dpi = 320)
 warnings()
+

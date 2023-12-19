@@ -71,11 +71,18 @@ Based on [this paper](https://www.anpc.asn.au/wp-content/uploads/2022/07/APC_30-
 #configure your email to access atlas occurence data from the galah package
 galah_config(email = 'adelegemmell@hotmail.com')
 
-#access ALA occurence data for ephemeral species in NSW
 fire_ephemerals <- galah_call() |>
-  galah_identify('Actinotus forsythii', 'Monotaxis macrophylla', 'Gyrostemon australasicus', 'Gyrostemon thesioides', 'Androcalva procumbens', 'Androcalva rosea', 'Commersonia rugosa') |>
+  galah_identify('Actinotus forsythii', 
+                 # 'Monotaxis macrophylla', 
+                 'Gyrostemon australasicus', 
+                 'Gyrostemon thesioides', 
+                 'Androcalva procumbens', 
+                 'Androcalva rosea' 
+                 # 'Commersonia rugosa'
+  ) |>
   galah_filter(cl22 == 'New South Wales') |>
-  galah_apply_profile(ALA) |> #applies data quality checks
+  galah_select(group = "basic", countryConservation, stateConservation, genus) |>
+  galah_apply_profile(ALA) |>
   atlas_occurrences()
 
 
@@ -536,8 +543,11 @@ merged_obs <- merged %>%
   mutate(cumulative_count = cumsum(count)) %>%
   ungroup()
 
-fire_palette <- c("#FFD700", "#FFA500", "#FF7F50", "#FF6347", "#FF4500", "#FF0000", "#DC143C")
+fire_palette <- c("#FF0000", "#FF6600", "#FFCC00", "#FFFF00", "#FFFF99")
 
+fire_palette <- c("#FFD700", "#FFA500", "#FF6347", "#FF4500", "#FF0000")
+
+library(showtext)
 font_add_google("Roboto", "Roboto")
 showtext_auto()
 
@@ -549,7 +559,7 @@ ggplot(merged_obs,
   scale_fill_manual(values = fire_palette) +
   labs(x = 'year', y = 'total observations', fill = 'species') +
   theme_classic() +
-  theme(text = element_text(family = 'montserrat'))
+  theme(text = element_text(family = 'Roboto'))
 
 
 streamgraph(merged_obs, key="scientificName", value="cumulative_count", date="year", offset = 'zero')
@@ -568,8 +578,7 @@ dens_plot <- ggplot(merged_obs,
   scale_fill_manual(values = fire_palette) +
   labs(x = 'year', y = 'total observations', fill = 'species') +
   theme_classic() +
-  theme(text = element_text(family = 'montserrat'),
-        legend.position = 'none')
+  theme(text = element_text(family = 'Roboto'))
 
 dens_plot
 ```

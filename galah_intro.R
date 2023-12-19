@@ -22,8 +22,14 @@ show_all(fields) |> View()
 # Find a field
 search_all(fields, "australian states")
 
+search_all(fields, "continent")
+
+
 # See what values are within a given field
 search_all(fields, "cl22") |>
+  show_values()
+
+search_all(fields, "continent") |>
   show_values()
 
 
@@ -33,7 +39,7 @@ search_all(fields, "cl22") |>
 galah_call() |> 
   galah_identify("perameles") |>
   galah_filter(year > 2010) |>
-  galah_group_by(year) |>
+  galah_group_by(year, cl22) |>
   atlas_counts()
   
 # Get counts of bandicoots only in New South Wales
@@ -115,3 +121,33 @@ galah_names |>
 
 
 
+#just playing with sturts desert pea
+library(ozmaps)
+library(sf)
+
+galah_config(email = 'adelegemmell@hotmail.com')
+
+sturts_dp <- galah_call() |>
+  galah_identify("Swainsona formosa") |>
+  galah_apply_profile(ALA) |> # A set of data quality filters to remove spurious records
+  atlas_occurrences()
+
+sturts_dp$year <- substr(sturts_dp$eventDate, 1, 4)
+
+sturts_dp$month <- substr(sturts_dp$eventDate, 6, 7)
+
+sturts_dp$month <- month.name[as.numeric(sturts_dp$month)]
+
+aus <- ozmaps::ozmap_country |>
+  st_transform(crs = st_crs(4326))
+
+# Map
+ggplot() +
+  geom_sf(data = aus,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = sturts_dp,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = month)) +
+  theme_void()

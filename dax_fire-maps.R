@@ -125,7 +125,8 @@ my_colours <- c("#1D2B12", "#3B7009", "#9E701B")
 # Map 1: Eastern Australia + fire extent
 # NOTE: Maybe it's worth highlighting NSW border?
 
-ggplot() +
+
+aus_fire <- ggplot() +
   geom_sf(data = ozmap_states,
           fill = 'white',
           colour = "grey50") +
@@ -143,7 +144,7 @@ ggplot() +
   coord_sf(xlim = c(135, 158)) +
   theme(plot.background = element_rect(fill = "white", color = NA))
 
-
+aus_fire
 # Map 2: NSW with observations (split by genus)
 # NOTE: Legend should be removed eventually
 
@@ -160,11 +161,12 @@ ggplot() +
   geom_point(data = fire_ephemerals,
              aes(x = decimalLongitude,
                  y = decimalLatitude,
-                 color = genus),
+                 fill = genus),
              alpha= 0.7,
-             size = 3) +
+             size = 3,
+             pch = 21) +
   # labs(title = 'Fire history and fire ephemeral species in NSW', color = 'Species') +
-  scale_color_manual(values = my_colours) +
+  scale_fill_manual(values = my_colours) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         legend.position = "right"

@@ -186,3 +186,322 @@ map_anime <- map +
 num_month <- max(ast_annual_ala$month) - min(ast_annual_ala$month) + 1
 animate(map_anime, nframes = num_month, duration = 6)
 ```
+
+```{r}
+
+sturts_dp <- galah_call() |>
+  galah_identify("Swainsona formosa") |>
+  galah_apply_profile(ALA) |> # A set of data quality filters to remove spurious records
+  atlas_occurrences()
+
+sturts_dp$year <- substr(sturts_dp$eventDate, 1, 4)
+
+sturts_dp$month <- substr(sturts_dp$eventDate, 6, 7)
+
+sturts_dp$month <- as.numeric(sturts_dp$month)
+
+sturts_dp$months <- month.name[(sturts_dp$month)]
+
+sturts_dp$months <- factor(sturts_dp$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+
+
+aus <- ozmaps::ozmap_country |>
+  st_transform(crs = st_crs(4326))
+
+
+dp_map <- ggplot() +
+  geom_sf(data = aus,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = sturts_dp,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = months)) +
+  theme_void()
+
+map_anime_dp <- dp_map +
+  transition_time(month) +
+  ggtitle('Sturts desert pea records by month \n Month: {frame_time}',
+          subtitle = 'Frame {frame} of {nframes}')
+num_month <- 12
+animate(map_anime_dp, nframes = num_month, duration = 6)
+
+
+{r}
+gyrost_all <- galah_call() |>
+  galah_identify('Gyrostemonaceae') |>
+  galah_filter(country == 'Australia') |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+unique(gyrost_all$scientificName)
+#[1] "Gyrostemon thesioides"      "Gyrostemon australasicus"   "Gyrostemon"                 "Codonocarpus cotinifolius"  "Gyrostemonaceae"           
+# [6] "Gyrostemon sheathii"        "Cypselocarpus haloragoides" "Gyrostemon subnudus"        "Gyrostemon sessilis"        "Codonocarpus pyramidalis"  
+#[11] "Gyrostemon ramulosus"       "Gyrostemon prostratus"      "Gyrostemon ditrigynus"      "Gyrostemon racemiger"       "Codonocarpus attenuatus"   
+#[16] "Tersonia cyathiflora"       "Gyrostemon brownii"         "Gyrostemon tepperi"         "Gyrostemon reticulatus"     "Walteranthus erectus"      
+#[21] "Gyrostemon osmus"           "Codonocarpus"   
+
+unique(gyrost_all$scientificName) %in% unique(annual_species_data$taxon_name)
+
+gyrost_ann <- gyrost_all$scientificName %in% annual_species_data$taxon_name
+
+gyrost_annual <- gyrost_all[gyrost_ann, ]
+
+gyrost_annual$year <- substr(gyrost_annual$eventDate, 1, 4)
+
+gyrost_annual$month <- substr(gyrost_annual$eventDate, 6, 7)
+
+gyrost_annual$month <- as.numeric(gyrost_annual$month)
+
+gyrost_annual$months <- month.name[(gyrost_annual$month)]
+
+gyrost_annual$months <- factor(gyrost_annual$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+
+gyrost_map <- ggplot() +
+  geom_sf(data = aus,
+          fill = NA,
+          colour = "grey60") +
+  geom_point(data = gyrost_annual,
+             aes(x = decimalLongitude,
+                 y = decimalLatitude,
+                 color = months)) +
+  theme_void()
+
+gyrost_map
+
+pink_flannel <- galah_call() |>
+  galah_identify('Actinotus forsythii') |>
+  galah_filter(country == 'Australia') |>
+  galah_apply_profile(ALA) |>
+  atlas_occurrences()
+
+pink_flannel$year <- substr(pink_flannel$eventDate, 1, 4)
+
+pink_flannel$month <- substr(pink_flannel$eventDate, 6, 7)
+
+pink_flannel$month <- as.numeric(pink_flannel$month)
+
+pink_flannel$months <- month.name[(pink_flannel$month)]
+
+pink_flannel$months <- factor(pink_flannel$months, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+
+
+
+{r}
+install.packages("pacman")
+pacman::p_load(tidyverse, here, rmapshaper, sf, ggpointdensity, viridis, ozmaps, concaveman, cowplot, patchwork)
+library(maps)
+library(mapdata)
+
+fire <- st_read(here("NPWS_fire", "NPWSFireHistory.shp")) |> 
+  st_transform(crs = 4326) |> 
+  st_zm() |>  # Remove Z or M values
+  ms_simplify() # Simplify edges of the fire layer
+
+fire$StartYear <- substr(fire$StartDate, 1, 4)
+
+fire_post_2000 <- fire %>% 
+  filter(StartYear >= 2000)
+
+aus <- ozmaps::ozmap_country |>
+  st_transform(crs = st_crs(4326))
+
+sf_oz <- ozmap_data("states")
+
+nsw <- sf_oz %>%
+  filter(NAME == 'New South Wales')
+
+st_crs(nsw) #EPSG:4283 
+st_crs(gyrost_annual_sf)
+
+?ozmaps:ozmap_states
+
+gyrost_annual_sf <- gyrost_annual %>%
+  drop_na(decimalLatitude) %>%
+    st_as_sf(coords = c("decimalLongitude", "decimalLatitude"))
+
+st_crs(gyrost_annual_sf) <- st_crs("EPSG:4283")
+
+# Perform a spatial intersection to keep only points within the NSW polygon
+gyrost_annual_nsw <- st_intersection(gyrost_annual_sf, nsw)
+
+gyrost_annual_nsw_post_2000 <- gyrost_annual_nsw %>%
+  filter(year >= 2000)
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_sf(data = fire_post_2000, 
+          colour= 'red') + 
+  geom_sf(data = gyrost_annual_nsw_post_2000,
+          alpha = 0.5) +
+  theme_void()
+
+
+{r}
+pink_flannel_sf <- pink_flannel %>%
+  drop_na(decimalLatitude) %>%
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude")) 
+
+st_crs(pink_flannel_sf) <- st_crs("EPSG:4283")
+
+# Perform a spatial intersection to keep only points within the NSW polygon
+pink_flannel_nsw <- st_intersection(pink_flannel_sf, nsw)
+
+pf_nsw_post_1950 <- pink_flannel_nsw %>%
+  filter(year >= 1950)
+
+fire_post_1950 <- fire %>% 
+  filter(StartYear >= 1950)
+
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_sf(data = fire_post_1950, 
+          colour= 'red') + 
+  geom_sf(data = pf_nsw_post_1950) +
+  coord_sf(xlim = c(149.5, 151), ylim = c(-32.5, -35.5)) +
+  theme_void()
+
+
+{r}
+install.packages('nswgeo')
+library(nswgeo)
+??nswgeo
+
+nsw_lhd <- nswgeo::lhd
+
+st_crs(nsw_lhd)
+
+nsw_lhd <- st_transform(nsw_lhd, 4326)
+
+bm <- nsw_lhd %>%
+  filter(lhd_name == 'Nepean Blue Mountains')
+
+st_crs(pf_nsw_post_1950) <- st_crs("EPSG:4283")
+
+pf_nsw_post_1950 <- st_transform(pf_nsw_post_1950, 4326)
+
+pink_flannel_BM_post_1950 <- st_intersection(pf_nsw_post_1950, bm)
+
+fire_bm_post_1950 <- st_intersection(fire_post_1950, bm)
+
+
+ggplot() +
+  geom_sf(data = bm) +
+  geom_sf(data = fire_bm_post_1950, 
+          aes(colour = year)) + 
+  geom_sf(data = pink_flannel_BM_post_1950) +
+  theme_void()
+
+
+{r}
+pink_flannel_sf <- pink_flannel %>%
+  drop_na(decimalLatitude) %>%
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude")) 
+
+st_crs(pink_flannel_sf) <- st_crs("EPSG:4283")
+
+# Perform a spatial intersection to keep only points within the NSW polygon
+pink_flannel_nsw <- st_intersection(pink_flannel_sf, nsw)
+
+pf_nsw_post_2000 <- pink_flannel_nsw %>%
+  filter(year >= 2000)
+
+ggplot() + 
+  geom_sf(data = pf_lhd, aes(fill = lhd_name, alpha = 0.1)) +
+  geom_sf(data = fire_post_2000, 
+          colour= 'red') + 
+  geom_sf(data = pf_nsw_post_2000) +
+  theme_void()
+
+nsw_lhd <- st_transform(nsw_lhd, 4283) #4326 
+st_crs(pf_nsw_post_2000)  #4283
+st_crs(nsw_lhd) 
+
+pf_nsw_post_2000 <- st_join(pf_nsw_post_2000, nsw_lhd, join = st_intersects)
+
+unique(pf_nsw_post_2000$lhd_name)
+
+pf_lhd <- nsw_lhd[nsw_lhd$lhd_name %in% pf_nsw_post_2000$lhd_name, ]
+
+bm_fire_post_2000 <- st_join(fire_post_2000, bm, join = st_intersects)
+
+ggplot() +
+  geom_sf(data = bm) +
+
+
+{r}
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_sf(data = pf_nsw_post_2000, aes(color = year)) +
+  theme_void()
+
+st_crs(fire_post_2000) #EPSG:4326 
+st_crs(pf_nsw_post_2000)# EPSG:4283 
+st_crs(nsw) #EPSG:4283 
+
+fire_post_2000 <- st_transform(fire_post_2000, 4283)
+
+fire_post_2000 <- st_make_valid(fire_post_2000)
+pf_nsw_post_2000 <- st_make_valid(pf_nsw_post_2000)
+
+pf_fires <- st_join(fire_post_2000, pf_nsw_post_2000, join = st_contains)
+
+
+
+
+ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_sf(data = pf_fires,
+          colour = 'red',
+          fill = 'red') +
+  geom_sf(data = pf_nsw_post_2000, aes(color = year)) +
+  theme_void()
+
+
+{r}
+fires_19_20 <- fire %>% 
+  filter(Label == '2019-20 Wildfire')
+
+
+
+{r}
+install.packages("transformr")
+
+map_pf <- ggplot() +
+  geom_sf(data = nsw,
+          fill = NA,
+          colour = "grey60") +
+  geom_sf(data = pf_nsw_post_2000,
+             aes(color = year)) +
+  labs(color = 'Year') +
+  theme_void()
+map_pf
+
+st_crs(nsw) # EPSG:4283 
+st_crs(pf_nsw_post_2000) # EPSG:4283 
+
+pf_nsw_post_2000$year <- as.numeric(pf_nsw_post_2000$year)
+
+map_anime_pf <- map_pf +
+  transition_time(year) +
+  ggtitle('Pink flannel flower records: {frame_time}',
+          subtitle = 'Frame {frame} of {nframes}')
+num_year <- max(pf_nsw_post_2000$year) - min(pf_nsw_post_2000$year) + 1
+animate(map_anime_pf, nframes = num_year)
+
+
+
+
+
+
+
+```

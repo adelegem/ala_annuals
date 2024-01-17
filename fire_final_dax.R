@@ -137,7 +137,7 @@ aus_fire
 # Map 2: NSW with observations (split by genus)
 # NOTE: Legend should be removed eventually
 
-
+color <- "#FF955C"
 
 eph_map <- ggplot() +
   geom_sf(data = nsw,
@@ -156,18 +156,29 @@ eph_map <- ggplot() +
              alpha= 0.7,
              size = 3,
              pch = 21) +
+  annotate("text", x = 150, y = -28.1, 
+           label = "Historic wildfires and \nprescribed burns", 
+           fontface = 'bold', hjust = 0.5, size = 6.5, col = '#FF955C', lineheight = 0.5) +
+  annotate("curve", x = 150, xend = 152,
+           y = -28.5, yend = -29.5,
+           curvature = .5,
+           color = "#FF5A00",
+           linewidth = 1,
+           alpha = 0.8,
+           arrow = arrow(length = unit(0.05, "inches"), type = "closed")) +
   # labs(title = 'Fire history and fire ephemeral species in NSW', color = 'Species') +
   scale_fill_manual(values = my_colours) +
   theme_map() +
   theme(plot.background = element_rect(fill = "white", color = NA),
-        legend.position = "right"
-        # legend.position = "none" # replace the above eventually
+        # legend.position = "right"
+        legend.position = "none" # replace the above eventually
   )
 eph_map
 
+
+# fire ephemeral records by year
 fire_ephemerals$year <- substr(fire_ephemerals$eventDate, 1, 4)
 
-#fire ephemeral records by year
 obs_year <- fire_ephemerals %>% 
   group_by(genus, year) %>%
   summarise(count = n())
@@ -259,6 +270,16 @@ main <- ggplot() +
              alpha= 0.7,
              size = 3,
              pch = 21) +
+  annotate("text", x = 150, y = -28.1, 
+           label = "Area burnt by wildfires and\nprescribed burns", 
+           fontface = 'bold', hjust = 0.5, size = 10, col = '#FF955C', lineheight = 0.4) +
+  annotate("curve", x = 150, xend = 152,
+           y = -28.5, yend = -29.5,
+           curvature = .5,
+           color = "#FF955C",
+           linewidth = 1,
+           alpha = 0.8,
+           arrow = arrow(length = unit(0.05, "inches"), type = "closed")) +
   # labs(title = 'Fire history and fire ephemeral species in NSW', color = 'Species') +
   scale_fill_manual(values = my_colours) +
   scale_colour_manual(values = my_colours) +
@@ -278,7 +299,8 @@ main <- ggplot() +
            color = "#222322") +
   ggtext::geom_textbox(aes(x = 133, y = -30.4),
                        label = paste0(
-                         "**Fire ephemerals** are plants that germinate after fire events 
+                         "**Fire ephemerals** are plants that germinate after 
+                         <span style = \"color:#FF955C\">**fire events**</span> 
                          and are important for shaping post-fire Australian ecosystems. 
                          However, fire ephemerals are elusive plants with short lifespans, 
                          making them difficult to observe. In NSW some of the most recorded 
@@ -332,7 +354,7 @@ ggsave('maps_graphs/test5.png', width = 12, height = 8, dpi = 320)
 
 ggdraw(main) +
   draw_plot(aus_fire, 
-            x = 0.75, y = 0.69, 
+            x = 0.75, y = 0.72, 
             width = 0.2, height = 0.2) +
   draw_plot(dens_plot,
             x = 0.08, y = 0.1,

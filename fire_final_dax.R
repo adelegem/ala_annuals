@@ -202,6 +202,8 @@ merged_obs <- merged %>%
 
 fire_palette <- c("#F3D126", "#FFA500", "#FF6347", "#FF4500", "#9A0707")
 
+my_colours <- c("#F3CE15", "#E07400", "#AF0808")
+
 library(showtext)
 font_add_google("Roboto", "Roboto")
 font_add_google("Lato", "lato")
